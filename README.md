@@ -1,3 +1,11 @@
+I forked the photobooth project to adept the solution to work smooth on a raspberry pi mini.
+Therefore i 
+- added some config changes to allow to fully disable qr-code generation and display
+- added code to fuly disable thumbnail generation and imagee gallery
+I also did some general overwork.
+It is now possible to copy photobooth to every folder under html
+
+------------------------------------------------------------------------------------------------
 This is the original Photobooth README
 
 # photobooth+
