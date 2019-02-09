@@ -1,4 +1,8 @@
 <?php
+/* edited by rk1
+	shrink only if gallery is enabled
+*/
+
 
 require_once('db.php');
 require_once('config.inc.php');
@@ -35,18 +39,22 @@ if($config['dev'] === false) {
 	);
 }
 
-// image scale
-list($width, $height) = getimagesize($filename_photo);
-$newwidth = 500;
-$newheight = $height * (1 / $width * 500);
-$source = imagecreatefromjpeg($filename_photo);
-$thumb = imagecreatetruecolor($newwidth, $newheight);
-imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
-imagejpeg($thumb, $filename_thumb);
 
-// insert into database
-$images[] = $file;
-file_put_contents('data.txt', json_encode($images));
+// image scale -> only when gallery enabled
+if ($config['use_gallery']) {
+    // shrink
+    list($width, $height) = getimagesize($filename_photo);
+    $newwidth = 500;
+    $newheight = round(($height * ($newwidth / $width)), 0);
+    $source = imagecreatefromjpeg($filename_photo);
+    $thumb  = imagecreatetruecolor($newwidth, $newheight);
+    imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+    imagejpeg($thumb, $filename_thumb);
 
+    // insert into database
+    $images[] = $file;
+    file_put_contents('data.txt', json_encode($images));
+}   // end of if ($config['use_gallery'])
+  
 // send imagename to frontend
 echo json_encode(array('success' => true, 'img' => $file));
