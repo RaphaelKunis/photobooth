@@ -9,5 +9,7 @@ qrcodes
 trash
 data.txt
 .sass-cache
+.sass-cache
 package-lock.json
 .htaccess
+/README.md.orig
