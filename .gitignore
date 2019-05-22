@@ -8,7 +8,7 @@ print
 qrcodes
 trash
 data.txt
-.sass-cache
+/nbproject
 .sass-cache
 package-lock.json
 .htaccess

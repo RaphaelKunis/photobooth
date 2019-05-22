@@ -1,3 +1,10 @@
+/* global cntdwn_time, use_qr, use_gallery */
+/*
+	changed by rk1
+	added cntdwn_time, use_qr, use_gallery 
+	no qr-code is created when use_qr is set to false -> makes it faster
+*/
+
 var L10N = {};
 var photoBooth = (function () {
     config = {};
@@ -5,8 +12,8 @@ var photoBooth = (function () {
     var public = {},
         loader = $('#loader'),
         startPage = $('#start'),
-        countDown = 5,
-        timeToLive = 90000,
+        countDown = cntdwn_time,       // Countdown from config
+        timeToLive = 90000,            // not relevant when public.resetTimeOut stays at current page
         qr = false,
         timeOut,
         saving = false,
@@ -14,7 +21,7 @@ var photoBooth = (function () {
         processing = false,
         pswp = {},
         resultPage = $('#result'),
-				stream,
+        stream,
         webcamConstraints = {
             audio: false,
             video: {
@@ -27,7 +34,8 @@ var photoBooth = (function () {
     // timeOut function
     public.resetTimeOut = function () {
         timeOut = setTimeout(function () {
-            window.location = window.location.origin;
+            // window.location = window.location.origin;        // returns to origin
+            // now we do nothing an stay at result page
         }, timeToLive);
     }
 
@@ -129,12 +137,14 @@ var photoBooth = (function () {
 
     // Render Picture after taking
     public.renderPic = function (result) {
-        // Add QR Code Image
-        $('.qr').html('');
-        $('<img src="qrcode.php?filename=' + result.img + '"/>').load(function () {
-            $(this).appendTo($('.qr'));
-            $('<p>').html(L10N.qrHelp).appendTo($('.qr'));
-        });
+        if (use_qr) {
+            // Add QR Code Image
+            $('.qr').html('');
+            $('<img src="qrcode.php?filename=' + result.img + '"/>').load(function () {
+                $(this).appendTo($('.qr'));
+                $('<p>').html(L10N.qrHelp).appendTo($('.qr'));
+            });
+        }
 
         // Add Print Link
         $(document).off('click touchstart', '.printbtn');
@@ -148,7 +158,7 @@ var photoBooth = (function () {
         });
 
         // Add Image to gallery and slider
-        public.addImage(result.img);
+        if (use_gallery) public.addImage(result.img);
 
         // Add Image
         $('<img src="/images/' + result.img + '" class="original">').load(function () {
@@ -306,7 +316,7 @@ var photoBooth = (function () {
     $('#result').click(function (e) {
         var target = $(e.target);
 
-        // Menü in and out
+        // Menue in and out
         if (!target.hasClass('qrbtn') && target.closest('.qrbtn').length == 0 && !target.hasClass('newpic') && !target.hasClass('printbtn') && target.closest('.printbtn').length == 0 && !target.hasClass('resetBtn') && !target.hasClass('gallery') && qr != true && !target.hasClass('homebtn') && target.closest('.homebtn').length == 0) {
             if ($('.resultInner').hasClass('hidden')) {
                 $('.resultInner').stop().animate({
