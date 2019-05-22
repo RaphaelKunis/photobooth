@@ -1,0 +1,19 @@
+digicamcontrol
+bower_components
+node_modules
+stats
+thumbs
+images
+print
+qrcodes
+trash
+data.txt
+<<<<<<< HEAD
+.sass-cache
+.sass-cache
+package-lock.json
+.htaccess
+/README.md.orig
+=======
+/nbproject
+>>>>>>> origin/master

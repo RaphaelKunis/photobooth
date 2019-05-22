@@ -1,0 +1,11 @@
+digicamcontrol
+bower_components
+node_modules
+stats
+thumbs
+images
+print
+qrcodes
+trash
+data.txt
+/nbproject
