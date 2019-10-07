@@ -8,12 +8,15 @@ print
 qrcodes
 trash
 data.txt
-<<<<<<< HEAD
-.sass-cache
+/nbproject
 .sass-cache
 package-lock.json
 .htaccess
-/README.md.orig
-=======
-/nbproject
->>>>>>> origin/master
+.htpasswd
+config.json
+mail-addresses.txt
+my.config.inc.php
+*.patch
+tmp
+keying
+*.orig

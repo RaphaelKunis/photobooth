@@ -13,15 +13,25 @@ var photoBooth = (function () {
         loader = $('#loader'),
         startPage = $('#start'),
         countDown = cntdwn_time,       // Countdown from config
+<<<<<<< HEAD
         timeToLive = 90000,            // not relevant when public.resetTimeOut stays at current page
+=======
+        cheeseTime = cheese_time,
+        timeToLive = 90000,
+>>>>>>> 422a10c32ec764054ffac86e70ae5bf03de5a3ff
         qr = false,
         timeOut,
         saving = false,
         gallery = $('#gallery'),
+        showScrollbarsInGallery = gallery_scrollbar,
         processing = false,
         pswp = {},
         resultPage = $('#result'),
-				stream,
+<<<<<<< HEAD
+=======
+        imgFilter = 'imgPlain',
+>>>>>>> 422a10c32ec764054ffac86e70ae5bf03de5a3ff
+        stream,
         webcamConstraints = {
             audio: false,
             video: {
@@ -31,55 +41,67 @@ var photoBooth = (function () {
             }
         };
 
+    var modal = {
+        open: function(selector) {
+            $(selector).addClass('modal--show');
+        },
+        close: function(selector) {
+            if ($(selector).hasClass('modal--show')) {
+                $(selector).removeClass('modal--show');
+
+                return true;
+            }
+
+            return false;
+        },
+        toggle: function(selector) {
+            $(selector).toggleClass('modal--show');
+        },
+        empty: function(selector) {
+            modal.close(selector);
+
+            $(selector).find('.modal__body').empty();
+        }
+    };
+
+    public.reloadPage = function () {
+        window.location.reload();
+    }
+
     // timeOut function
     public.resetTimeOut = function () {
         timeOut = setTimeout(function () {
+<<<<<<< HEAD
             // window.location = window.location.origin;        // returns to origin
             // now we do nothing an stay at result page
+=======
+            public.reloadPage();
+>>>>>>> 422a10c32ec764054ffac86e70ae5bf03de5a3ff
         }, timeToLive);
     }
 
     // reset whole thing
     public.reset = function () {
-        loader.hide();
+        loader.removeClass('open');
         qr = false;
-        $('.qr').html('').hide();
+        modal.empty('#qrCode');
         $('.qrbtn').removeClass('active').attr('style', '');
         $('.loading').text('');
-        gallery.removeClass('open');
-        $('.galInner').hide();
-        $('.resultInner').css({
-            'bottom': '-100px'
-        });
+        gallery.removeClass('gallery--open');
+        gallery.find('.gallery__inner').hide();
         $('.spinner').hide();
+        $('.send-mail').hide();
+        public.resetMailForm();
     }
 
     // init
     public.init = function (options) {
         public.l10n();
         public.reset();
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-        $('#wrapper').width(w).height(h);
-        $('.galleryInner').width(w * 3);
-        $('.galleryInner').height(h);
-        $('.galleryInner div').width(w);
-        $('.galleryInner').css({
-            'left': -w
-        });
-        loader.width(w).height(h);
-        $('.stages').hide();
+
         public.initPhotoSwipeFromDOM('#galimages');
 
-        startPage.show();
-    }
-
-    // check for resizing
-    public.handleResize = function () {
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-        $('#wrapper').width(w).height(h);
-        $('#loader').width(w).height(h);
+        startPage.addClass('open');
     }
 
     public.l10n = function (elem) {
@@ -90,40 +112,102 @@ var photoBooth = (function () {
         });
     }
 
+    public.openNav = function () {
+        $('#mySidenav').addClass('sidenav--open');
+    }
+
+    public.closeNav = function () {
+        $('#mySidenav').removeClass('sidenav--open');
+    }
+
+    public.toggleNav = function () {
+        $('#mySidenav').toggleClass('sidenav--open');
+    }
+
+    public.startVideo = function () {
+        if(!navigator.mediaDevices) {
+            return;
+        }
+
+        var getMedia = (navigator.mediaDevices.getUserMedia || navigator.mediaDevices.webkitGetUserMedia || navigator.mediaDevices.mozGetUserMedia || false);
+
+        if(!getMedia) {
+            return;
+        }
+
+        getMedia.call(navigator.mediaDevices, webcamConstraints)
+            .then(function(stream) {
+                $('#video').show();
+                var video = $('#video').get(0);
+                video.srcObject = stream;
+                public.stream = stream;
+            })
+            .catch(function (error) {
+                console.log('Could not get user media: ', error)
+            });
+    }
+
+    public.stopVideo = function () {
+        if(public.stream) {
+            var track = public.stream.getTracks()[0];
+            track.stop();
+            $('#video').hide();
+        }
+    }
+
     // Cheese
-    public.cheese = function () {
-        $('#counter').text('');
-        $('.loading').text(L10N.cheese);
-        public.takePic();
+    public.cheese = function (photoStyle) {
+        if (isdev) {
+            console.log(photoStyle);
+        }
+        if ((photoStyle=='photo')){
+            $('#counter').text('');
+            $('.loading').text(L10N.cheese);
+        } else {
+            $('#counter').text('');
+            $('.loading').text(L10N.cheeseCollage);
+        }
+        public.takePic(photoStyle);
     }
 
     // take Picture
-    public.takePic = function () {
+    public.takePic = function (photoStyle) {
         processing = true;
+        if (isdev) {
+            console.log('Take Picture:' + photoStyle);
+        }
+        if (useVideo) {
+            public.stopVideo();
+        }
         setTimeout(function () {
-						if(useVideo){
-							var track = public.stream.getTracks()[0];
-							track.stop();
-							$('video').hide();
-						}
-            $('#counter').text('');
-            $('.spinner').show();
-            $('.loading').text(L10N.busy);
-        }, 1000);
-        $.ajax({
-            url: 'takePic.php',
-            dataType: "json",
-            cache: false,
-            success: function (result) {
-                if (result.error) {
-                    public.errorPic(result);
+	    if ((photoStyle=='photo')){
+                $('#counter').text('');
+                $('.spinner').show();
+                $('.loading').text(L10N.busy);
+            } else {
+                $('#counter').text('');
+                if (!isdev) {
+                    setTimeout(function () {
+                        $('.spinner').show();
+                        $('.loading').text(L10N.busyCollage);
+                }, 7500);
                 } else {
-                    public.renderPic(result);
+                    $('.spinner').show();
+                    $('.loading').text(L10N.busyCollage);
                 }
-            },
-            error: function (xhr, status, error) {
+	    }
+            $('#counter').text('');
+        }, cheeseTime);
+        jQuery.post("takePic.php",{filter: imgFilter,style: photoStyle}).done(function( result ){
+            result = JSON.parse(result);
+            if (result.error) {
                 public.errorPic(result);
+            } else {
+                public.renderPic(result);
             }
+
+        }).fail(function(xhr, status, result){
+            public.errorPic(result);
         });
     }
 
@@ -131,12 +215,13 @@ var photoBooth = (function () {
     public.errorPic = function (result) {
         setTimeout(function () {
             $('.spinner').hide();
-            $('.loading').html(L10N.error + '<a class="btn" href="/">' + L10N.reload + '</a>');
+            $('.loading').html(L10N.error + '<a class="btn" href="./">' + L10N.reload + '</a>');
         }, 1100);
     }
 
     // Render Picture after taking
     public.renderPic = function (result) {
+<<<<<<< HEAD
         if (use_qr) {
             // Add QR Code Image
             $('.qr').html('');
@@ -145,36 +230,55 @@ var photoBooth = (function () {
                 $('<p>').html(L10N.qrHelp).appendTo($('.qr'));
             });
         }
+=======
+        // Add QR Code Image
+        var qrCodeModal = $('#qrCode');
+        modal.empty(qrCodeModal);
+        $('<img src="qrcode.php?filename=' + result.img + '"/>').on('load', function () {
+            var body = qrCodeModal.find('.modal__body');
+
+            $(this).appendTo(body);
+            $('<p>').html(L10N.qrHelp).appendTo(body);
+        });
+>>>>>>> 422a10c32ec764054ffac86e70ae5bf03de5a3ff
 
         // Add Print Link
         $(document).off('click touchstart', '.printbtn');
-        $(document).on('click touchstart', '.printbtn', function (e) {
+        $(document).on('click', '.printbtn', function (e) {
             e.preventDefault();
-            $.ajax({
-                url: 'print.php?filename=' + encodeURI(result.img),
-            }).done(function (data) {
-                console.log(data)
-            })
+            e.stopPropagation();
+            $('#print_mesg').addClass('modal--show');
+            setTimeout(function () {
+                $.ajax({
+                    url: 'print.php?filename=' + encodeURI(result.img),
+                }).done(function (data) {
+                    if (isdev) {
+                        console.log(data)
+                    }
+                    setTimeout(function () {
+                        $('#print_mesg').removeClass('modal--show');
+                        public.reloadPage();
+                    },5000);
+                })
+            },1000);
         });
 
         // Add Image to gallery and slider
         if (use_gallery) public.addImage(result.img);
 
         // Add Image
-        $('<img src="/images/' + result.img + '" class="original">').load(function () {
+        $('<img src="'+imgFolder+'/' + result.img + '" class="original">').on('load', function () {
             $('#result').css({
-                'background-image': 'url(/images/' + result.img + ')'
+                'background-image': 'url('+imgFolder+'/' + result.img + ')'
             });
             startPage.fadeOut(400, function () {
                 resultPage.fadeIn(400, function () {
                     setTimeout(function () {
                         processing = false;
-                        loader.slideUp('fast');
+                        loader.removeClass('open');
                     }, 400);
                     setTimeout(function () {
-                        $('.resultInner').stop().animate({
-                            'bottom': '50px'
-                        }, 400).removeClass('hidden');
+                        $('.resultInner').addClass('show');
                     }, 400);
                     clearTimeout(timeOut);
                     public.resetTimeOut();
@@ -184,109 +288,113 @@ var photoBooth = (function () {
     }
 
     // add image to Gallery
-    public.addImage = function (image) {
-        // fixme: set to appendTo, if new images should appear at the end, or to prependTo, if new images should appear at the beginning
-        var $node = $('<a>').html('<img src="/thumbs/' + image + '" />').data('size', '1920x1280').attr('href', '/images/' + image + '?new=1')
-        if (gallery_newest_first) {
-            $node.prependTo($('#galimages'));
-        } else {
-            $node.appendTo($('#galimages'));
+    public.addImage = function (imageName) {
+        var thumbImg = new Image();
+        var bigImg = new Image();
+        var thumbSize = '';
+        var bigSize = '';
+
+        var imgtoLoad = 2;
+
+        thumbImg.onload = function() {
+            thumbSize = this.width + 'x' + this.height;
+            if (--imgtoLoad == 0) {allLoaded();}
+        }
+
+        bigImg.onload = function() {
+            bigSize = this.width + 'x' + this.height;
+            if (--imgtoLoad == 0) {allLoaded();}
+        }
+
+        bigImg.src = imgFolder+'/' + imageName;
+        thumbImg.src = thumbFolder+'/' + imageName;
+
+        function allLoaded() {
+            var $node = $('<a>').html(thumbImg).data('size', bigSize).attr('href', imgFolder+'/' + imageName).attr('data-med', thumbFolder+'/' + imageName).attr('data-med-size', thumbSize);
+            if (gallery_newest_first) {
+                $node.prependTo($('#galimages'));
+            } else {
+                $node.appendTo($('#galimages'));
+            }
+
+            $('#galimages').children().not('a').remove();
         }
     }
 
     // Open Gallery Overview
     public.openGallery = function (elem) {
-        var pos = elem.offset();
-        gallery.css({
-                'left': pos.left,
-                'top': pos.top
-            })
-            .data('left', pos.left)
-            .data('top', pos.top)
-            .addClass('open')
-            .animate({
-                'width': '102%',
-                'height': '100%',
-                'top': 0,
-                'left': 0
-            }, 300, function () {
-                $('.galInner').show();
-                gallery.css({
-                    'overflow-y': 'scroll'
-                });
-            });
+        if(showScrollbarsInGallery) {
+            gallery.addClass('scrollbar');
+        }
+
+        gallery.addClass('gallery--open');
+
+        setTimeout(() => gallery.find('.gallery__inner').show(), 300);
     }
 
-    $(window).resize(public.handleResize);
+    //Filter
+    $('.imageFilter').on('click', function (e) {
+        public.toggleNav();
+    });
 
-    // Open QR Code in Gallery
-
-    // Take Picture Button
-    $('.takePic, .newpic').click(function (e) {
-        e.preventDefault();
-        var target = $(e.target);
-        if (target.hasClass('gallery')) {
-            public.openGallery(target);
-        } else {
-            if (!processing) {
-                public.reset();
-								if(useVideo){
-									navigator.getMedia = (navigator.mediaDevices.getUserMedia || navigator.mediaDevices.webkitGetUserMedia || navigator.mediaDevices.mozGetUserMedia || false);
-									if(navigator.getMedia) {
-										navigator.mediaDevices.getUserMedia(webcamConstraints)
-										.then(function(stream) {
-											$('video').show();
-											var video = document.getElementById('video');
-											video.srcObject = stream;
-											public.stream = stream;
-										})
-										.catch(function (error) {
-											console.log(error);
-										});
-									}
-								}
-                loader.slideDown('slow', 'easeOutBounce', function () {
-                    public.countdown(countDown, $('#counter'));
-                });
-            }
+    $('.sidenav > div').on('click', function (e) {
+        $('.sidenav > div').removeAttr("class");
+        $(this).addClass("activeSidenavBtn");
+        imgFilter = $(this).attr("id");
+        if (isdev) {
+            console.log(imgFilter);
         }
     });
 
-    // Open Gallery Button
-    $('#result .gallery, #start .gallery').click(function (e) {
+    function takePictureHandler(photoStyle) {
+        if (!processing) {
+            public.closeNav();
+            public.reset();
+            if (useVideo) {
+                public.startVideo();
+            }
+            loader.addClass('open');
+            public.countdown(countDown, $('#counter'),photoStyle);
+        }
+    }
+
+    // Take Picture Button
+    $('.takePic, .newpic').on('click', function (e) {
         e.preventDefault();
+
+        takePictureHandler('photo');
+    });
+
+    // Take Collage Button
+    $('.takeCollage, .newcollage').on('click', function (e) {
+        e.preventDefault();
+
+        takePictureHandler('collage');
+    });
+
+    $('#mySidenav .closebtn').on('click', function (e) {
+        e.preventDefault();
+
+        public.closeNav();
+    });
+
+    // Open Gallery Button
+    $('.gallery-button').on('click', function (e) {
+        e.preventDefault();
+
+        public.closeNav();
         public.openGallery($(this));
     });
 
     // Close Gallery Overview
-    $('.close_gal').click(function (e) {
+    $('.gallery__close').on('click', function (e) {
         e.preventDefault();
-        $('.galInner').hide();
-        gallery.css({
-            'overflow-y': 'visible'
-        });
-        $('#gallery').animate({
-            'width': '200px',
-            'height': '70px',
-            'left': $('#gallery').data('left'),
-            'top': $('#gallery').data('top')
-        }, 300, function () {
-            $('#gallery').removeClass('open');
-        });
+        gallery.find('.gallery__inner').hide();
+        gallery.removeClass('gallery--open');
     });
 
-    $('.tabbox ul li').click(function () {
-        var elem = $(this),
-            target = $('.' + elem.data('target'));
-        if (!elem.hasClass('active')) {
-            $('.tabbox ul li').removeClass('active');
-            $('.tab').removeClass('active');
-            elem.addClass('active');
-            target.addClass('active');
-        }
-    });
     // QR in gallery
-    $(document).on('click touchstart', '.gal-qr-code', function (e) {
+    $('.gal-qr-code').on('click', function (e) {
         e.preventDefault();
 
         var pswpQR = $('.pswp__qr');
@@ -295,34 +403,41 @@ var photoBooth = (function () {
         } else {
             pswpQR.empty();
             var img = pswp.currItem.src;
-            img = img.replace('/images/', '');
+            img = img.split('/').pop();
+
             $('<img>').attr('src', 'qrcode.php?filename=' + img).appendTo(pswpQR);
 
             pswpQR.addClass('qr-active').fadeIn('fast');
         }
     });
+
     // print in gallery
-    $(document).on('click touchstart', '.gal-print', function (e) {
+    $('.gal-print').on('click', function (e) {
         e.preventDefault();
         var img = pswp.currItem.src;
-        img = img.replace('images/', '');
-        $.ajax({
-            url: 'print.php?filename=' + encodeURI(img),
-        }).done(function (data) {
-            console.log(data)
-        })
+        img = img.split('/').pop();
+        modal.open('#print_mesg');
+        setTimeout(function () {
+            $.ajax({
+                url: 'print.php?filename=' + encodeURI(img),
+            }).done(function (data) {
+                if (isdev) {
+                    console.log(data)
+                }
+                setTimeout(function () {
+                    modal.close('#print_mesg');
+                    pswp.close();
+                },5000);
+            });
+        },1000);
     });
 
+<<<<<<< HEAD
     $('#result').click(function (e) {
         var target = $(e.target);
 
-<<<<<<< HEAD
-        // Menü in and out
-        if (!target.hasClass('qrbtn') && target.closest('.qrbtn').length == 0 && !target.hasClass('newpic') && !target.hasClass('printbtn') && target.closest('.printbtn').length == 0 && !target.hasClass('resetBtn') && !target.hasClass('gallery') && qr != true && !target.hasClass('homebtn') && target.closest('.homebtn').length == 0) {
-=======
         // Menue in and out
-        if (!target.hasClass('qrbtn') && target.closest('.qrbtn').length == 0 && !target.hasClass('newpic') && !target.hasClass('printbtn') && target.closest('.printbtn').length == 0 && !target.hasClass('resetBtn') && !target.hasClass('gallery') && qr != true && !target.hasClass('homebtn')) {
->>>>>>> origin/master
+        if (!target.hasClass('qrbtn') && target.closest('.qrbtn').length == 0 && !target.hasClass('newpic') && !target.hasClass('printbtn') && target.closest('.printbtn').length == 0 && !target.hasClass('resetBtn') && !target.hasClass('gallery') && qr != true && !target.hasClass('homebtn') && target.closest('.homebtn').length == 0) {
             if ($('.resultInner').hasClass('hidden')) {
                 $('.resultInner').stop().animate({
                     'bottom': '50px'
@@ -331,105 +446,128 @@ var photoBooth = (function () {
                 $('.resultInner').stop().animate({
                     'bottom': '-100px'
                 }, 400).addClass('hidden');
+=======
+    // chroma keying print
+    $(document).on('click touchstart', '.gal-print-chroma_keying', function (e) {
+        e.preventDefault();
+        var img = pswp.currItem.src;
+        img = img.split('/').pop();
+        $.post( "chromakeying_info.php", function( info ) {
+            if (info.chroma_keying == true) {
+                var currentHref = $(location).attr('href').split('#')[0];;
+                var encodedString = btoa(currentHref);
+                //var decodedString = atob(encodedString);
+                $(location).attr('href','chromakeying.php?filename=' + encodeURI(img) + '&location=' + encodeURI(encodedString));
+>>>>>>> 422a10c32ec764054ffac86e70ae5bf03de5a3ff
             }
+        }, "json");
+    });
+
+    $('.gal-mail, .mailbtn').on('click touchstart', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var mail = $('.send-mail');
+        if (mail.hasClass('mail-active')) {
+            public.resetMailForm();
+            mail.removeClass('mail-active').fadeOut('fast');
+        } else {
+            mail.addClass('mail-active').fadeIn('fast');
+        }
+    });
+
+    $('#send-mail-form').on('submit', function (e) {
+        e.preventDefault();
+        var img = '';
+        if($('.pswp.pswp--open.pswp--visible').length) {
+            img = pswp.currItem.src;
+        } else {
+            img = resultPage.css("background-image").replace('url(','').replace(')','').replace(/\"/gi, "").split('/'+imgFolder+'/')[1];
         }
 
-        if (qr && !target.hasClass('qrbtn')) {
-					var qrpos = $('.qrbtn').offset(),
-						qrbtnwidth = $('.qrbtn').outerWidth(),
-						qrbtnheight = $('.qrbtn').outerHeight()
-						$('.qr').removeClass('active');
-            $('.qr').animate({
-							'width': qrbtnwidth,
-							'height': qrbtnheight,
-							'left': qrpos.left,
-							'top': qrpos.top,
-							'margin-left': 0,
-            }, 250, function(){
-							$('.qr').hide();
-						});
-						qr = false;
-        }
+        img = img.split('/').pop();
 
-        // Go to Home
-        if (target.hasClass('homebtn') || target.closest('.homebtn').length > 0) {
-            window.location = window.location.origin;
-        }
+        $('#mail-form-image').val(img);
+        var message = $('#mail-form-message');
+        message.empty();
 
-        // Qr in and out
-        if (target.hasClass('qrbtn') || target.closest('.qrbtn').length > 0) {
-
-						var qrpos = $('.qrbtn').offset(),
-							qrbtnwidth = $('.qrbtn').outerWidth(),
-							qrbtnheight = $('.qrbtn').outerHeight()
-
-            if (qr) {
-								$('.qr').removeClass('active');
-                $('.qr').animate({
-                    'width': qrbtnwidth,
-                    'height': qrbtnheight,
-                    'left': qrpos.left,
-										'top': qrpos.top,
-										'margin-left': 0,
-                }, 250, function(){
-									$('.qr').hide();
-								});
-                qr = false;
-            } else {
-                qr = true;
-								$('.qr').css({
-									'width': qrbtnwidth,
-									'height': qrbtnheight,
-									'left': qrpos.left,
-									'top': qrpos.top
-								});
-								$('.qr').show();
-                $('.qr').animate({
-                    'width': 500,
-                    'height': 600,
-                    'left': '50%',
-                    'margin-left': -265,
-                    'top': 50
-                }, 250, function(){
-									$('.qr').addClass('active');
-								});
+        var form = $(this);
+        var oldValue = form.find('.btn').html();
+        form.find('.btn').html('<i class="fa fa-spinner fa-spin"></i>');
+        $.ajax({
+            url: 'sendPic.php',
+            type: 'POST',
+            data: form.serialize(),
+            dataType: "json",
+            cache: false,
+            success: function (result) {
+                if (result.success === true) {
+                    message.fadeIn().html('<span style="color:green">' + L10N.mailSent + '</span>');
+                } else {
+                    message.fadeIn().html('<span style="color:red">' + result.error + '</span>');
+                }
+            },
+            error: function (xhr, status, error) {
+                message.fadeIn('fast').html('<span style="color: red;">' + L10N.mailError + '</span>');
+            },
+            complete: function () {
+                form.find('.btn').html(oldValue);
             }
+        });
+    });
+
+    $('#send-mail-close').on('click', function (e) {
+        public.resetMailForm();
+        $('.send-mail').removeClass('mail-active').fadeOut('fast');
+    });
+
+    public.resetMailForm = function() {
+        $('#send-mail-form').trigger('reset');
+        $('#mail-form-message').html('');
+    };
+
+    $('#result').on('click', function (e) {
+        if (!modal.close('#qrCode')) {
+            $('.resultInner').toggleClass('show');
         }
     });
 
     // Show QR Code
-    $('.qrbtn').click(function (e) {
+    $('.qrbtn').on('click', function (e) {
         e.preventDefault();
+        e.stopPropagation();
+
+        modal.toggle('#qrCode');
     });
 
-    $('.printbtn').click(function (e) {
+    $('.homebtn').on('click', function (e) {
         e.preventDefault();
-    });
+        e.stopPropagation();
 
-    $('.homebtn').click(function (e) {
-        e.preventDefault();
+        public.reloadPage();
     });
 
     // Countdown Function
-    public.countdown = function (calls, element) {
+    public.countdown = function (calls, element, photoStyle) {
         count = 0;
         current = calls;
+        if (isdev) {
+            console.log(photoStyle);
+        }
         var timerFunction = function () {
             element.text(current);
             current--;
-            TweenLite.to(element, 0.0, {
-                scale: 8,
-                opacity: 0.2
-            });
-            TweenLite.to(element, 0.75, {
-                scale: 1,
-                opacity: 1
-            });
+
+            element.removeClass('tick');
 
             if (count < calls) {
+                window.setTimeout(() => element.addClass('tick'), 50);
                 window.setTimeout(timerFunction, 1000);
             } else {
-                public.cheese();
+                if (isdev) {
+                    console.log(photoStyle);
+                }
+                public.cheese(photoStyle);
             }
             count++;
         };
@@ -709,10 +847,14 @@ var photoBooth = (function () {
 
         pswp.listen('beforeChange', function () {
             $('.pswp__qr').removeClass('qr-active').fadeOut('fast');
+            public.resetMailForm();
+            $('.send-mail').removeClass('mail-active').fadeOut('fast');
         });
 
         pswp.listen('close', function () {
             $('.pswp__qr').removeClass('qr-active').fadeOut('fast');
+            public.resetMailForm();
+            $('.send-mail').removeClass('mail-active').fadeOut('fast');
         });
 
         pswp.init();
@@ -728,7 +870,7 @@ var photoBooth = (function () {
 
 
     // clear Timeout to not reset the gallery, if you clicked anywhere
-    $(document).click(function (event) {
+    $(document).on('click', function (event) {
         if (startPage.is(':visible')) {
 
         } else {
@@ -738,7 +880,7 @@ var photoBooth = (function () {
     });
     // Disable Right-Click
     if (!isdev) {
-        $(this).bind("contextmenu", function (e) {
+        $(this).on("contextmenu", function (e) {
             e.preventDefault();
         });
     }
