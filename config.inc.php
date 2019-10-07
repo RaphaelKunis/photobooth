@@ -1,71 +1,115 @@
 <?php
-/* edited by rk1
-	added some parameters (image quality, cntdwn_time, ...)
-	it is now possible to change the image quality of the camera before shooting tthe photo
-		- needs to be adapted for other camera models than canon
-		will be set back after taking the photo
-*/
+
+//  WARNING!
+// This config gets overwritten by the admin panel if you use it.
+// If you want to use only this file, delete the admin/config.json file and do not use the admin panel
+// as it writes new config.json files.
 
 $config = array();
 $sys['os'] = (DIRECTORY_SEPARATOR == '\\') || (strtolower(substr(PHP_OS, 0, 3)) === 'win') ? 'windows' : 'linux';
 $config['dev'] = false;
 $config['use_print'] = false;
-$config['use_qr'] = false;
-$config['show_fork'] = false;
-$config['previewFromCam'] = true; // experimental see https://github.com/andreknieriem/photobooth/pull/30
-#$config['file_format'] = 'date'; // comment in to get dateformat images
-$config['timeout'] = 90000;			// time till startpage is shown again (originally 90000)
+$config['use_qr'] = true;
+$config['print_qrcode'] = true;
+$config['print_frame'] = false;
+$config['use_mail'] = false; // mail data needs to be configured
+$config['use_gpio_button'] = false; // Use alt+p to take a new picture, can be triggered via GPIO24
+$config['show_fork'] = true;
+$config['previewFromCam'] = false; // experimental see https://github.com/andreknieriem/photobooth/pull/30
+$config['file_format_date'] = false;
+$config['cntdwn_time'] = '5'; // control countdown timer
+$config['cheese_time'] = '1000'; // control time for cheeeeese!
+$config['use_filter'] = true;
+$config['polaroid_effect'] = false;
+$config['polaroid_rotation'] = '0';
+$config['chroma_keying'] = true;
+$config['use_collage'] = false;
+$config['bluegray_theme'] = false;
+
+// LANGUAGE
+// possible values: en, de, es, fr
+$config['language'] = 'de';
+
+// StartScreen
+$config['start_screen_title'] = 'Photobooth';
+$config['start_screen_subtitle'] = 'Webinterface by André Rinas';
 
 // FOLDERS
 // change the folders to whatever you like
 $config['folders']['images'] = 'images';
-$config['folders']['thumbs'] = 'thumbs';
-$config['folders']['qrcodes'] = 'qrcodes';
+$config['folders']['keying'] = 'keying';
 $config['folders']['print'] = 'print';
+$config['folders']['qrcodes'] = 'qrcodes';
+$config['folders']['thumbs'] = 'thumbs';
+$config['folders']['tmp'] = 'tmp';
+
+// WEDDING SETTINGS
+$config['is_wedding'] = false;
+$config['wedding']['groom'] = 'Name 1';
+$config['wedding']['bride'] = 'Name 2';
+$config['wedding']['symbol'] = 'fa-heart-o';
 
 // GALLERY
 // should the gallery list the newest pictures first?
-$config['gallery']['newest_first'] = true;
-$config['use_gallery'] = false;		// rk1, 22.12.18:   if false the pictures are not saved in data.txt and not shrinked
+$config['show_gallery'] = true;
+$config['newest_first'] = true;
+$config['scrollbar'] = false;
+$config['show_date'] = false; // only works if file_format_date = true
+$config['gallery']['date_format'] = 'd.m.Y - G:i';
 
-// LANGUAGE
-// possible values: en, de, fr
-$config['language'] = 'de';
+// TEXT ON PRINT
+$config['is_textonprint'] = false;
+$config['textonprint']['line1'] = 'line 1';
+$config['textonprint']['line2'] = 'line 2';
+$config['textonprint']['line3'] = 'line 3';
+$config['locationx'] = '2250';
+$config['locationy'] = '1050';
+$config['rotation'] = '40';
+$config['fontsize'] = '100';
+$config['linespace'] = '100';
 
-// rk1 
-//IMAGE QUALITY 0 = MAXIMUM, 7 = Minimum, should be at most 4
-// Auslesbar über gphoto2 --list-all-config unter Pkt "/main/imgsettings/imageformat". Das kann für andere Kameras evtl. anders sein
-$config['cntdwn_time'] = '8';
-$config['gphoto_qty_setting'] = '/main/imgsettings/imageformat';        // sets the image format on eos 600d
-$config['img_qty'] = '1';                                               // the quality
-/* Quality eos 600d
-Choice: 0 Large Fine JPEG
-Choice: 1 Large Normal JPEG
-Choice: 2 Medium Fine JPEG
-Choice: 3 Medium Normal JPEG
-Choice: 4 Small Fine JPEG
-Choice: 5 Small Normal JPEG
-Choice: 6 Smaller JPEG
-Choice: 7 Tiny JPEG
-Choice: 8 RAW + Large Fine JPEG
-Choice: 9 RAW
- */
-// end rk1
+// EMAIL
+// If connection fails some help can be found here: https://github.com/PHPMailer/PHPMailer/wiki/Troubleshooting
+// Especially gmail needs some special config
+$config['send_all_later'] = false; // if true enables checkbox to save the current mail address for later in mail-addresses.txt
+$config['mail_host'] = 'smtp.example.com';
+$config['mail_username'] = 'photobooth@example.com';
+$config['mail_password'] = 'yourpassword';
+$config['mail_secure'] = 'tls';
+$config['mail_port'] = '587';
+$config['mail_fromAddress'] = 'photobooth@example.com';
+$config['mail_fromName'] = 'Photobooth';
+
+switch($config['language']) {
+	case 'de':
+	$config['mail_subject'] = 'Hier ist dein Bild';
+	$config['mail_text'] = 'Hey, dein Bild ist angehangen.';
+	break;
+	case 'fr':
+	$config['mail_subject'] = 'Voici votre photo';
+	$config['mail_text'] = 'Hé, ta photo est attachée.';
+	break;
+	case 'en':
+	default:
+	$config['mail_subject'] = 'Here is your picture';
+	$config['mail_text'] = 'Hey, your picture is attached.';
+	break;
+}
 
 // COMMANDS and MESSAGES
 switch($sys['os']) {
 	case 'windows':
-            $config['take_picture']['cmd'] = 'digicamcontrol\CameraControlCmd.exe /capture /filename %s';
-            $config['take_picture']['msg'] = 'Photo transfer done.';
-            $config['print']['cmd'] = 'mspaint /pt "%s"';
-            $config['print']['msg'] = '';
-            break;
+	$config['take_picture']['cmd'] = 'digicamcontrol\CameraControlCmd.exe /capture /filename %s';
+	$config['take_picture']['msg'] = 'Photo transfer done.';
+	$config['print']['cmd'] = 'mspaint /pt "%s"';
+	$config['print']['msg'] = '';
+	break;
 	case 'linux':
 	default:
-            $config['take_picture']['cmd'] = 'sudo gphoto2 --set-config '.$config['gphoto_qty_setting'].'='.$config['img_qty'].' --capture-image-and-download --force-overwrite --filename=%s --set-config '.$config['gphoto_qty_setting'].'=0';
-            $config['take_picture']['msg'] = 'New file is in location';
-            $config['print']['cmd'] = 'sudo lp -o landscape -o fit-to-page %s';
-            $config['print']['msg'] = '';
+	$config['take_picture']['cmd'] = 'sudo gphoto2 --capture-image-and-download --filename=%s images';
+	$config['take_picture']['msg'] = 'New file is in location';
+	$config['print']['cmd'] = 'sudo lp -o landscape -o fit-to-page %s';
+	$config['print']['msg'] = '';
 	break;
 }
 
@@ -80,17 +124,4 @@ if(file_exists('admin/config.json')) {
 if($filename){
 	$file = json_decode(file_get_contents($filename),true);
 	$config = $file;
-	// foreach($config as $k=>$conf){
-	// 	if(is_array($conf)) {
-	// 		foreach($conf as $sk => $sc) {
-	// 			if(isset($file[$k][$sk]) && !empty($file[$k][$sk])) {
-	// 				$config[$k][$sk] = $file[$k][$sk];
-	// 			}
-	// 		}
-	// 	} else {
-	// 		if(isset($file[$k]) && !empty($file[$k])) {
-	// 			$config[$k] = $file[$k];
-	// 		}
-	// 	}
-	// }
 }

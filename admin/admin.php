@@ -2,7 +2,12 @@
 
 $data = $_POST;
 if(isset($data['type'])){
-  require_once('../config.inc.php');
+  $my_config = '../my.config.inc.php';
+  if (file_exists($my_config)) {
+    require_once('../my.config.inc.php');
+  } else {
+    require_once('../config.inc.php');
+  }
 
   if($data['type'] == 'reset') {
 
@@ -18,6 +23,11 @@ if(isset($data['type'])){
       }
     }
 
+    // delete mail-addresses.txt
+    if(is_file('../mail-addresses.txt')){
+      unlink('../mail-addresses.txt');
+    }
+    
     // delete data.txt
     if(is_file('../data.txt')){
       unlink('../data.txt'); // delete file

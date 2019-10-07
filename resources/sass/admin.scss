@@ -1,17 +1,9 @@
-$mainColor: #e67e22;
-$hoverColor: #d35400;
+@import "modules/colors";
 $error: #e74c3c;
 $success: #2ecc71;
 
 #start {
   display: block;
-}
-
-body {
-  overflow: auto;
-  background: url(../img/bg.jpg) center center no-repeat;
-  background-size: cover;
-  background-attachment: fixed;
 }
 
 button {
@@ -43,6 +35,7 @@ input[type="checkbox"] {
   margin: 50px auto;
   background: #fff;
   position: relative;
+  max-width: 100%;
 }
 
 .panel {

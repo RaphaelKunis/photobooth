@@ -12,4 +12,11 @@ data.txt
 .sass-cache
 package-lock.json
 .htaccess
-/README.md.orig
+.htpasswd
+config.json
+mail-addresses.txt
+my.config.inc.php
+*.patch
+tmp
+keying
+*.orig
