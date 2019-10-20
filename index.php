@@ -52,6 +52,8 @@ require_once('db.php');
  		var cntdwn_time = <?php echo ($config['cntdwn_time']); ?>;
 		var cheese_time = <?php echo ($config['cheese_time']); ?>;
 		var theme = <?php echo $config['bluegray_theme'] ? "'bluegray'" : "'default'"; ?>;
+		// only take photo when minimal -> given to core.js
+		var rk_minimal = <?php echo ($config['rk_minimal']) ? 'true' : 'false'; ?>;
 	</script>
 </head>
 <body class="deselect">
@@ -156,7 +158,7 @@ require_once('db.php');
 			<?php if($config['use_qr']){ echo '<div id="qrCode" class="modal"><div class="modal__body"></div></div>';} ?>
 		</div>
 
-		<?php if($config['show_gallery']){ ?>
+		<?php if($config['show_gallery'] && $config['rk_minimal'] == false){ ?>
 		<!-- Gallery -->
 		<div id="gallery" class="gallery">
 			<div class="gallery__inner">

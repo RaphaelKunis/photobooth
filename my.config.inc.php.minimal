@@ -1,0 +1,158 @@
+<?php
+
+// 13.10.2019, rk1	added rk_-variables
+
+//  WARNING!
+// This config gets overwritten by the admin panel if you use it.
+// If you want to use only this file, delete the admin/config.json file and do not use the admin panel
+// as it writes new config.json files.
+
+$config = array();
+$sys['os'] = (DIRECTORY_SEPARATOR == '\\') || (strtolower(substr(PHP_OS, 0, 3)) === 'win') ? 'windows' : 'linux';
+$config['dev'] = false;
+$config['use_print'] = false;
+$config['use_qr'] = false;
+$config['print_qrcode'] = false;
+$config['print_frame'] = false;
+$config['use_mail'] = false; // mail data needs to be configured
+$config['use_gpio_button'] = false; // Use alt+p to take a new picture, can be triggered via GPIO24
+$config['show_fork'] = false;
+$config['previewFromCam'] = false; // experimental see https://github.com/andreknieriem/photobooth/pull/30
+$config['file_format_date'] = true;
+$config['cntdwn_time'] = '3'; // control countdown timer
+$config['cheese_time'] = '1000'; // control time for cheeeeese!
+$config['use_filter'] = false;
+$config['polaroid_effect'] = false;
+$config['polaroid_rotation'] = '0';
+$config['chroma_keying'] = true;
+$config['use_collage'] = false;
+$config['bluegray_theme'] = true;
+
+// LANGUAGE
+// possible values: en, de, es, fr
+$config['language'] = 'de';
+
+// StartScreen
+$config['start_screen_title'] = 'Photobooth';
+$config['start_screen_subtitle'] = 'Webinterface by André Rinas';
+
+// FOLDERS
+// change the folders to whatever you like
+$config['folders']['images'] = 'images';
+$config['folders']['keying'] = 'keying';
+$config['folders']['print'] = 'print';
+$config['folders']['qrcodes'] = 'qrcodes';
+$config['folders']['thumbs'] = 'thumbs';
+$config['folders']['tmp'] = 'tmp';
+
+// WEDDING SETTINGS
+$config['is_wedding'] = false;
+$config['wedding']['groom'] = 'Name 1';
+$config['wedding']['bride'] = 'Name 2';
+$config['wedding']['symbol'] = 'fa-heart-o';
+
+// GALLERY
+// should the gallery list the newest pictures first?
+$config['show_gallery'] = false;
+$config['newest_first'] = true;
+$config['scrollbar'] = false;
+$config['show_date'] = false; // only works if file_format_date = true
+$config['gallery']['date_format'] = 'd.m.Y - G:i';
+
+// TEXT ON PRINT
+$config['is_textonprint'] = false;
+$config['textonprint']['line1'] = 'line 1';
+$config['textonprint']['line2'] = 'line 2';
+$config['textonprint']['line3'] = 'line 3';
+$config['locationx'] = '2250';
+$config['locationy'] = '1050';
+$config['rotation'] = '40';
+$config['fontsize'] = '100';
+$config['linespace'] = '100';
+
+// EMAIL
+// If connection fails some help can be found here: https://github.com/PHPMailer/PHPMailer/wiki/Troubleshooting
+// Especially gmail needs some special config
+$config['send_all_later'] = false; // if true enables checkbox to save the current mail address for later in mail-addresses.txt
+$config['mail_host'] = 'smtp.example.com';
+$config['mail_username'] = 'photobooth@example.com';
+$config['mail_password'] = 'yourpassword';
+$config['mail_secure'] = 'tls';
+$config['mail_port'] = '587';
+$config['mail_fromAddress'] = 'photobooth@example.com';
+$config['mail_fromName'] = 'Photobooth';
+
+switch($config['language']) {
+	case 'de':
+	$config['mail_subject'] = 'Hier ist dein Bild';
+	$config['mail_text'] = 'Hey, dein Bild ist angehangen.';
+	break;
+	case 'fr':
+	$config['mail_subject'] = 'Voici votre photo';
+	$config['mail_text'] = 'Hé, ta photo est attachée.';
+	break;
+	case 'en':
+	default:
+	$config['mail_subject'] = 'Here is your picture';
+	$config['mail_text'] = 'Hey, your picture is attached.';
+	break;
+}
+
+// rk1, 29.09.2019 - add some extras for Canon cameras (select image quality)
+// rk1 - set image quality for my camera (EOS 600d)
+//IMAGE QUALITY 0 = MAXIMUM, 7 = Minimum, should be at most 4 in my case
+// Auslesbar ueber gphoto2 --list-all-config unter Pkt "/main/imgsettings/imageformat". Das kann fuer andere Kameras evtl. anders sein
+$config['rk_minimal'] = true;						// wenn tur, dann wird das Foto unbearbeitet gelassen, kein QR-Code erzeugt und kein Thumbnail
+$config['rk_change_cam_settings'] = true;		// false
+$config['rk_gphoto_qty_setting'] = '/main/imgsettings/imageformat';        	   // sets the image format on eos 600d (eos 60d imageformatsd)
+$config['rk_keep_photo'] = ' --set-config capturetarget=1 --keep'; // ''       // if not empty leave the picture on the camera
+$config['rk_img_qty_cpt'] = '2'; // 2                                          // the quality of the photos to capture
+$config['rk_img_qty_std'] = '0'; // 0                                          // the quality of the photos to capture
+/* Quality eos 600d/eos 60d
+Choice: 0 Large Fine JPEG
+Choice: 1 Large Normal JPEG
+Choice: 2 Medium Fine JPEG
+Choice: 3 Medium Normal JPEG
+Choice: 4 Small Fine JPEG
+Choice: 5 Small Normal JPEG
+Choice: 6 Smaller JPEG
+Choice: 7 Tiny JPEG
+Choice: 8 RAW + Large Fine JPEG -- do not use this
+Choice: 9 RAW                   -- do not use this
+ */
+// end rk1
+
+// COMMANDS and MESSAGES
+switch($sys['os']) {
+	case 'windows':
+		$config['take_picture']['cmd'] = 'digicamcontrol\CameraControlCmd.exe /capture /filename %s';
+		$config['take_picture']['msg'] = 'Photo transfer done.';
+		$config['print']['cmd'] = 'mspaint /pt "%s"';
+		$config['print']['msg'] = '';
+	break;
+	case 'linux':
+		if ($config['rk_change_cam_settings']) {
+			$config['take_picture']['cmd'] = 'sudo gphoto2 --set-config '.$config['rk_gphoto_qty_setting'].'='.$config['rk_img_qty_cpt'];		// set Quality
+			$config['take_picture']['cmd'] .=  ' '.$config['rk_keep_photo'].' --capture-image-and-download --force-overwrite --filename=%s';	// take photo
+			$config['take_picture']['cmd'] .=  ' --set-config '.$config['rk_gphoto_qty_setting'].'='.$config['rk_img_qty_std'].'';				// set quality back
+		} else {
+			$config['take_picture']['cmd'] = 'sudo gphoto2 '.$config['rk_keep_photo'].' --capture-image-and-download --force-overwrite --filename=%s';
+		}
+		$config['take_picture']['msg'] = 'New file is in location';
+		$config['print']['cmd'] = 'sudo lp -o landscape -o fit-to-page %s';
+		$config['print']['msg'] = '';
+	break;
+}
+
+// MERGE WITH admin/config.json if exists
+$filename = false;
+if(file_exists('admin/config.json')) {
+	$filename = 'admin/config.json';
+} elseif(file_exists('config.json')) {
+	$filename = 'config.json';
+}
+
+if($filename){
+	$file = json_decode(file_get_contents($filename),true);
+	$config = $file;
+}

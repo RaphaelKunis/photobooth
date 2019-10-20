@@ -1,3 +1,7 @@
+/* 
+    14.10.19, rk1: changed of renderPic (first set backgroud then do qr, thumbnail and other things)
+                   added minimal to disable qr and thumbnail creation
+*/
 var L10N = {};
 var photoBooth = (function () {
     config = {};
@@ -5,8 +9,9 @@ var photoBooth = (function () {
     var public = {},
         loader = $('#loader'),
         startPage = $('#start'),
-        countDown = cntdwn_time,       // Countdown from config
+        countDown = cntdwn_time,        // Countdown from config
         cheeseTime = cheese_time,
+        minimal = rk_minimal,           // rk1 to make the displaying of picture faster
         timeToLive = 90000,
         qr = false,
         timeOut,
@@ -202,41 +207,8 @@ var photoBooth = (function () {
 
     // Render Picture after taking
     public.renderPic = function (result) {
-        // Add QR Code Image
-        var qrCodeModal = $('#qrCode');
-        modal.empty(qrCodeModal);
-        $('<img src="qrcode.php?filename=' + result.img + '"/>').on('load', function () {
-            var body = qrCodeModal.find('.modal__body');
 
-            $(this).appendTo(body);
-            $('<p>').html(L10N.qrHelp).appendTo(body);
-        });
-
-        // Add Print Link
-        $(document).off('click touchstart', '.printbtn');
-        $(document).on('click', '.printbtn', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $('#print_mesg').addClass('modal--show');
-            setTimeout(function () {
-                $.ajax({
-                    url: 'print.php?filename=' + encodeURI(result.img),
-                }).done(function (data) {
-                    if (isdev) {
-                        console.log(data)
-                    }
-                    setTimeout(function () {
-                        $('#print_mesg').removeClass('modal--show');
-                        public.reloadPage();
-                    },5000);
-                })
-            },1000);
-        });
-
-        // Add Image to gallery and slider
-        public.addImage(result.img);
-
-        // Add Image
+        // Add Image - rk1 - now the first thing to do - may this will display the image faster
         $('<img src="'+imgFolder+'/' + result.img + '" class="original">').on('load', function () {
             $('#result').css({
                 'background-image': 'url('+imgFolder+'/' + result.img + ')'
@@ -255,6 +227,43 @@ var photoBooth = (function () {
                 });
             });
         });
+
+        if (!(minimal)) {
+            // Add QR Code Image
+            var qrCodeModal = $('#qrCode');
+            modal.empty(qrCodeModal);
+            $('<img src="qrcode.php?filename=' + result.img + '"/>').on('load', function () {
+                var body = qrCodeModal.find('.modal__body');
+
+                $(this).appendTo(body);
+                $('<p>').html(L10N.qrHelp).appendTo(body);
+            });
+        
+            // Add Print Link
+            $(document).off('click touchstart', '.printbtn');
+            $(document).on('click', '.printbtn', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $('#print_mesg').addClass('modal--show');
+                setTimeout(function () {
+                    $.ajax({
+                        url: 'print.php?filename=' + encodeURI(result.img),
+                    }).done(function (data) {
+                        if (isdev) {
+                            console.log(data)
+                        }
+                        setTimeout(function () {
+                            $('#print_mesg').removeClass('modal--show');
+                            public.reloadPage();
+                        },5000);
+                    })
+                },1000);
+            });
+
+            // Add Image to gallery and slider
+            public.addImage(result.img);
+
+        } // rk1: end if (!(minimal))
     }
 
     // add image to Gallery

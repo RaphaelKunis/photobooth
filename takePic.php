@@ -1,11 +1,14 @@
 <?php
 
+// 14.10.2019, rk1: if $config['rk_minimal'] given and true then do nothing with the photo except displaing it (no thumbnail, qr-code or anything esle)	
+
+
 require_once('db.php');
 require_once('folders.php');
 
 $my_config = 'my.config.inc.php';
 if (file_exists($my_config)) {
-	require_once('my.config.inc.php');
+	require_once($my_config);
 } else {
 	require_once('config.inc.php');
 }
@@ -15,6 +18,17 @@ if($config['file_format_date'] == true) {
 } else {
 	$file = md5(time()).'.jpg';
 }
+
+// rk1
+if (isset($config['rk_minimal']) ? $config['rk_minimal'] : false == true) {
+	$config['use_filter'] = false;
+	$config['polaroid_effect'] = false;
+	$config['polaroid_rotation'] = '0';
+	$config['chroma_keying'] = false;
+	$config['use_collage'] = false;
+} else {
+	$config['rk_minimal'] = false;	// to be sure later
+} // end rk1
 
 $filename_photo = $config['folders']['images'] . DIRECTORY_SEPARATOR . $file;
 $filename_keying = $config['folders']['keying'] . DIRECTORY_SEPARATOR . $file;
@@ -284,16 +298,18 @@ if($config['chroma_keying'] == true) {
 	imagedestroy($source);
 }
 
-// image scale, create thumbnail
-list($width, $height) = getimagesize($filename_photo);
-$newwidth = 500;
-$newheight = $height * (1 / $width * 500);
-$source = imagecreatefromjpeg($filename_photo);
-$thumb = imagecreatetruecolor($newwidth, $newheight);
-imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
-imagejpeg($thumb, $filename_thumb);
-imagedestroy($source);
-imagedestroy($thumb);
+if($config['rk_minimal'] == false) { // rk1: disable thumbnail
+	// image scale, create thumbnail
+	list($width, $height) = getimagesize($filename_photo);
+	$newwidth = 500;
+	$newheight = $height * (1 / $width * 500);
+	$source = imagecreatefromjpeg($filename_photo);
+	$thumb = imagecreatetruecolor($newwidth, $newheight);
+	imagecopyresized($thumb, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+	imagejpeg($thumb, $filename_thumb);
+	imagedestroy($source);
+	imagedestroy($thumb);
+}
 
 // insert into database
 $images[] = $file;
